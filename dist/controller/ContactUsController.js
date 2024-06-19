@@ -9,9 +9,9 @@ const ContactUsModel_1 = __importDefault(require("../model/ContactUsModel"));
 const sendContactMessage = async (req, res) => {
     try {
         // extract date from req.body
-        const { reason, name, email, message } = req.body;
+        const { reason, firstName, lastName, email, phoneNumber, message } = req.body;
         // save message to mongoDB
-        const contactMessage = await ContactUsModel_1.default.create({ reason, name, email, message });
+        const contactMessage = await ContactUsModel_1.default.create({ reason, firstName, lastName, email, phoneNumber, message });
         // send email to website owner
         const transporter = nodemailer_1.default.createTransport({
             service: 'gmail',
@@ -22,7 +22,8 @@ const sendContactMessage = async (req, res) => {
         });
         const mailOptions = {
             from: `Email: ${email}`,
-            to: 'graceaccesschurch@gmail.com',
+            // to: 'info@rccgopenheavens.com', // Website owner's email address
+            to: 'ebenezeraladesuyi@gmail.com',
             subject: 'New Message from Contact Form',
             // text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
             html: `
@@ -54,7 +55,8 @@ const sendContactMessage = async (req, res) => {
                     <div class="container">
                         <h2>New Message from Contact Form</h2>
                         <p><strong>I have a</strong> ${reason}</p>
-                        <p><strong>Name:</strong> ${name}</p>
+                        <p><strong>Name:</strong> ${firstName}  ${lastName}</p>
+                        <p><strong>Email:</strong> ${phoneNumber}</p>
                         <p><strong>Email:</strong> ${email}</p>
                         <p><strong>Message:</strong> ${message}</p>
                     </div>

@@ -7,10 +7,10 @@ import contactUsModel from "../model/ContactUsModel";
 export const sendContactMessage = async (req: Request, res: Response): Promise<void> => {
     try {
         // extract date from req.body
-        const { reason, name, email, message } = req.body;
+        const { reason, firstName, lastName, email, phoneNumber, message } = req.body;
 
         // save message to mongoDB
-        const contactMessage = await contactUsModel.create({reason, name, email, message});
+        const contactMessage = await contactUsModel.create({reason, firstName, lastName, email, phoneNumber, message});
 
         // send email to website owner
         const transporter = nodemailer.createTransport({
@@ -23,7 +23,8 @@ export const sendContactMessage = async (req: Request, res: Response): Promise<v
 
         const mailOptions = {
             from: `Email: ${email}`, // Your Gmail email address
-            to: 'graceaccesschurch@gmail.com', // Website owner's email address
+            // to: 'info@rccgopenheavens.com', // Website owner's email address
+            to: 'ebenezeraladesuyi@gmail.com', // Website owner's email address
             subject: 'New Message from Contact Form',
             // text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
             html: `
@@ -55,7 +56,8 @@ export const sendContactMessage = async (req: Request, res: Response): Promise<v
                     <div class="container">
                         <h2>New Message from Contact Form</h2>
                         <p><strong>I have a</strong> ${reason}</p>
-                        <p><strong>Name:</strong> ${name}</p>
+                        <p><strong>Name:</strong> ${firstName}  ${lastName}</p>
+                        <p><strong>Email:</strong> ${phoneNumber}</p>
                         <p><strong>Email:</strong> ${email}</p>
                         <p><strong>Message:</strong> ${message}</p>
                     </div>

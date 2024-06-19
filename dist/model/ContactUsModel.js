@@ -24,16 +24,24 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const AudioSchema = new mongoose_1.Schema({
+const contactSchema = new mongoose_1.Schema({
     reason: {
         type: String,
         required: true,
     },
-    name: {
+    firstName: {
+        type: String,
+        required: true,
+    },
+    lastName: {
         type: String,
         required: true,
     },
     email: {
+        type: String,
+        required: true,
+    },
+    phoneNumber: {
         type: String,
         required: true,
     },
@@ -42,5 +50,5 @@ const AudioSchema = new mongoose_1.Schema({
         required: true,
     },
 });
-const contactUsModel = mongoose_1.default.model('contactus', AudioSchema);
+const contactUsModel = mongoose_1.default.model('rccgcontactus', contactSchema);
 exports.default = contactUsModel;

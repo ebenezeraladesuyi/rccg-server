@@ -1,22 +1,32 @@
 import mongoose, { Schema } from "mongoose";
 
 export interface iContactUs extends Document {
-    reason : string,
-    name: string;
+    reason: string;
+    firstName : string,
+    lastName: string;
     email: string;
+    phoneNumber: string;
     message: string;
 }
 
-const AudioSchema: Schema = new Schema({
+const contactSchema: Schema = new Schema({
     reason:{
         type: String,
         required: true,
     },
-    name:{
+    firstName:{
+        type: String,
+        required: true,
+    },
+    lastName:{
         type: String,
         required: true,
     },
     email:{
+        type: String,
+        required: true,
+    },
+    phoneNumber:{
         type: String,
         required: true,
     },
@@ -26,7 +36,7 @@ const AudioSchema: Schema = new Schema({
     },
 })
 
-const contactUsModel = mongoose.model<iContactUs>('contactus', AudioSchema)
+const contactUsModel = mongoose.model<iContactUs>('rccgcontactus', contactSchema)
 
 export default contactUsModel
 
