@@ -25,7 +25,7 @@ const blogSchema = new mongoose_1.default.Schema({
     },
     createdAt: {
         type: Date,
-        required: Date.now,
+        default: Date.now,
     },
 });
 exports.blogModel = mongoose_1.default.model("blogs", blogSchema);

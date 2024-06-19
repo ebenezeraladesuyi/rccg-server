@@ -56,7 +56,7 @@ const sendContactMessage = async (req, res) => {
                         <h2>New Message from Contact Form</h2>
                         <p><strong>I have a</strong> ${reason}</p>
                         <p><strong>Name:</strong> ${firstName}  ${lastName}</p>
-                        <p><strong>Email:</strong> ${phoneNumber}</p>
+                        <p><strong>Phone Number:</strong> ${phoneNumber}</p>
                         <p><strong>Email:</strong> ${email}</p>
                         <p><strong>Message:</strong> ${message}</p>
                     </div>

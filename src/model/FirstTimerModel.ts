@@ -46,6 +46,10 @@ const firstTimerSchema = new mongoose.Schema({
     type: String,
     required: [false, "please enter your mobile"],
   },
+  email: {
+    type: String,
+    required: [false, "please enter your email"],
+  },
   visitOrStay: {
     type: String,
     required: [true, "please enter if you're visiting or staying"],

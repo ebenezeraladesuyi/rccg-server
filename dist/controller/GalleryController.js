@@ -18,7 +18,7 @@ const createGalleryItem = async (req, res) => {
             folder: 'gallery' // Optional: Folder in Cloudinary where images will be stored
         });
         // Create new gallery item with Cloudinary URL
-        const newGalleryItem = new GalleryModel_1.default({ gacImage: result.secure_url });
+        const newGalleryItem = new GalleryModel_1.default({ rccgGallImage: result.secure_url });
         await newGalleryItem.save();
         // Fetch all gallery items sorted by createdAt timestamp in descending order
         const allGalleryItems = await GalleryModel_1.default.find().sort({ createdAt: -1 });

@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 
 interface gall {
-    gacImage: string | null;
+    rccgGallImage: string | null;
     createdAt: Date;
 }
 
 interface iGallery extends gall, mongoose.Document {}
 
 const carSchema = new mongoose.Schema({
-    gacImage: {
+    rccgGallImage: {
         type: String,
         // required: [true, "please, upload image"]
     },
@@ -18,6 +18,6 @@ const carSchema = new mongoose.Schema({
     },
 })
 
-const galleryModel = mongoose.model<iGallery>("gacImage", carSchema);
+const galleryModel = mongoose.model<iGallery>("rccgImage", carSchema);
 
 export default galleryModel;

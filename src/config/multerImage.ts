@@ -23,6 +23,6 @@ const uploadImage = multer({
         }
         cb(null, true);
     }
-}).single('gacImage'); 
+}).single('rccgGallImage'); 
 
 export default uploadImage

@@ -17,7 +17,7 @@ export const createGalleryItem = async (req: Request, res: Response): Promise<vo
         });
 
         // Create new gallery item with Cloudinary URL
-        const newGalleryItem = new galleryModel({ gacImage: result.secure_url });
+        const newGalleryItem = new galleryModel({ rccgGallImage: result.secure_url });
         await newGalleryItem.save();
 
         // Fetch all gallery items sorted by createdAt timestamp in descending order

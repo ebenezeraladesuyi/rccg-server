@@ -63,7 +63,7 @@ export const getAllFirstTimers = async (req: Request, res: Response) => {
         const allFirstTimers = await firstTimerModel.findOne();
 
         return res.status(200).json({
-            message: "gotten all fist timers",
+            message: "gotten all first timers",
             data: allFirstTimers,
         });
 

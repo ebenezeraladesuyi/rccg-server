@@ -49,7 +49,7 @@ const getAllFirstTimers = async (req, res) => {
     try {
         const allFirstTimers = await FirstTimerModel_1.default.findOne();
         return res.status(200).json({
-            message: "gotten all fist timers",
+            message: "gotten all first timers",
             data: allFirstTimers,
         });
     }
