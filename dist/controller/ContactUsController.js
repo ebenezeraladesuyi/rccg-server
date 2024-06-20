@@ -22,8 +22,8 @@ const sendContactMessage = async (req, res) => {
         });
         const mailOptions = {
             from: `Email: ${email}`,
-            // to: 'info@rccgopenheavens.com', // Website owner's email address
-            to: 'ebenezeraladesuyi@gmail.com',
+            to: 'info@rccgopenheavens.com',
+            // to: 'ebenezeraladesuyi@gmail.com', // Website owner's email address
             subject: 'New Message from Contact Form',
             // text: `Name: ${name}\nEmail: ${email}\nMessage: ${message}`,
             html: `
