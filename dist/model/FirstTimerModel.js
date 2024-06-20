@@ -50,7 +50,7 @@ const firstTimerSchema = new mongoose_1.default.Schema({
         required: [true, "do you have Jesus as your savior?"],
     },
     pastorVisit: {
-        type: String,
+        type: Boolean,
         required: [true, "do you eant a pastor/counsellor to visit you?"],
     },
 });

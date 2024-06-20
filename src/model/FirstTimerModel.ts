@@ -12,7 +12,7 @@ interface firstTimer {
   visitOrStay : string;
   prayerRequest : string;
   haveJesus : string;
-  pastorVisit : string;
+  pastorVisit : boolean;
 }
 
 interface iFirstTimer extends firstTimer, mongoose.Document {}
@@ -63,7 +63,7 @@ const firstTimerSchema = new mongoose.Schema({
     required: [true, "do you have Jesus as your savior?"],
   },
   pastorVisit: {
-    type: String,
+    type: Boolean,
     required: [true, "do you eant a pastor/counsellor to visit you?"],
   },
  
