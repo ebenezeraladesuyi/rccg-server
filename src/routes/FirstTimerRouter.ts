@@ -4,7 +4,7 @@ import { getAllFirstTimers, registerFirstTimer } from "../controller/FirstTimerc
 const firstTimerRouter = express.Router()
 
 firstTimerRouter.post("/registerfirst", registerFirstTimer)
-firstTimerRouter.get("/allfirsttimers", getAllFirstTimers)
+firstTimerRouter.get("/allfirst", getAllFirstTimers)
 
 
 export default firstTimerRouter
