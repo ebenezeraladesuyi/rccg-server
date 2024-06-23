@@ -47,7 +47,7 @@ exports.registerFirstTimer = registerFirstTimer;
 // get all first timer
 const getAllFirstTimers = async (req, res) => {
     try {
-        const allFirstTimers = await FirstTimerModel_1.default.findOne();
+        const allFirstTimers = await FirstTimerModel_1.default.find();
         return res.status(200).json({
             message: "gotten all first timers",
             data: allFirstTimers,
