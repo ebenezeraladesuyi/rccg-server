@@ -3,27 +3,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.processPayment = void 0;
-const stripe_1 = __importDefault(require("stripe"));
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const stripeClient = new stripe_1.default(stripeSecretKey);
-// POST /api/payment - Process payment with Stripe
-const processPayment = async (req, res) => {
+exports.createPaymentIntent = void 0;
+const stripe_1 = __importDefault(require("../config/stripe"));
+// function to create payment
+const createPaymentIntent = async (req, res) => {
+    const { amount } = req.body;
     try {
-        const { amount, currency, token } = req.body;
-        // Create a charge using the token received from the client
-        const charge = await stripeClient.charges.create({
+        const paymentIntent = await stripe_1.default.paymentIntents.create({
             amount,
-            currency,
-            source: token.id,
-            description: 'Online offering for church', // Customize as needed
+            currency: 'eur',
+            // payment_method_types: ['card']
         });
-        // Optionally, save the charge details to your database
-        res.status(200).json({ message: 'Payment successful', charge });
+        res.status(200).json({
+            clientSecret: paymentIntent.client_secret,
+            message: "payment successfull"
+        });
     }
     catch (error) {
-        console.error('Error processing payment:', error);
-        res.status(500).json({ error: error.message });
+        console.error('Error creating payment intent', error);
+        res.status(500).json({ error: 'failed to create payment intent' });
     }
 };
-exports.processPayment = processPayment;
+exports.createPaymentIntent = createPaymentIntent;
