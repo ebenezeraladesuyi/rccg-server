@@ -10,7 +10,7 @@ const blogRouter = express.Router()
 blogRouter.post("/creatblog", uploadBlogImage, createBlogPost);
 blogRouter.get("/allblogs", getAllBlogPosts);
 blogRouter.get("/getoneblog/:id", getBlogPostById);
-blogRouter.get("/deleteoneblog/:id", deleteBlogPostByIdSimple);
+blogRouter.delete("/deleteoneblog/:id", deleteBlogPostByIdSimple);
 blogRouter.get("/updateoneblog/:id", updateBlogPost);
 blogRouter.get("/getblogsummary", getBlogsSummary);
 
