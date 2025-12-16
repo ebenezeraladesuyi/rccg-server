@@ -62,3 +62,75 @@ export const getBlogPostById = async (req: Request, res: Response): Promise<void
         res.status(500).json({ message: error.message });
     }
 };
+
+// get all blog summary
+export const getBlogsSummary = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const blogPosts = await blogModel.find()
+            .select('_id title author createdAt blogImage') 
+            .sort({ createdAt: -1 });
+        
+        res.status(200).json(blogPosts);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// delete one blog
+export const deleteBlogPostByIdSimple = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    try {
+        const deletedBlogPost = await blogModel.findByIdAndDelete(id);
+        
+        if (deletedBlogPost) {
+            // Get updated list of blog posts
+            const updatedBlogPosts = await blogModel.find().sort({ createdAt: -1 });
+            res.status(200).json({
+                message: 'Blog post deleted successfully',
+                deletedBlogPost,
+                blogPosts: updatedBlogPosts
+            });
+        } else {
+            res.status(404).json({ message: 'Blog post not found' });
+        }
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Update one blog post
+export const updateBlogPost = async (req: Request, res: Response): Promise<void> => {
+    const { id } = req.params;
+    const { author, title, details } = req.body;
+    
+    try {
+        const updatedData: any = { author, title, details };
+        
+        // If there's a new image file, upload it to Cloudinary
+        if (req.file) {
+            // Upload new image to Cloudinary
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                folder: 'blogs'
+            });
+            updatedData.blogImage = result.secure_url;
+            
+            // Optionally delete old image from Cloudinary
+            // You can extract and delete old image if needed
+        }
+        
+        const updatedBlogPost = await blogModel.findByIdAndUpdate(
+            id,
+            updatedData,
+            { new: true, runValidators: true }
+        );
+        
+        if (updatedBlogPost) {
+            res.status(200).json(updatedBlogPost);
+        } else {
+            res.status(404).json({ message: 'Blog post not found' });
+        }
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
