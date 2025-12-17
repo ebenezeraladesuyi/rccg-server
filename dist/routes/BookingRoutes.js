@@ -8,7 +8,7 @@ const BookingController_1 = require("../controller/BookingController");
 const validation_1 = require("../middleware/validation");
 const bookingRouter = express_1.default.Router();
 // Public routes
-bookingRouter.post('/', validation_1.validateBooking, BookingController_1.createBooking);
+bookingRouter.post('/book', validation_1.validateBooking, BookingController_1.createBooking);
 bookingRouter.get('/public/:id', BookingController_1.getBookingById); // Public viewing of specific booking
 // Admin routes (protected)
 bookingRouter.get('/admin', 

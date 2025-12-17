@@ -26,12 +26,12 @@ exports.validateBooking = [
         return date >= today;
     }).withMessage('Proposed date must be today or in the future'),
     (0, express_validator_1.body)('eventType')
+        .trim()
         .notEmpty().withMessage('Event type is required')
-        .isIn(['wedding', 'baptism', 'funeral', 'thanksgiving', 'dedication', 'conference', 'seminar', 'concert', 'other'])
-        .withMessage('Invalid event type'),
+        .isLength({ min: 2, max: 100 }).withMessage('Event type must be between 2 and 100 characters'),
     (0, express_validator_1.body)('expectedGuests')
         .notEmpty().withMessage('Number of expected guests is required')
-        .isInt({ min: 1, max: 10000 }).withMessage('Expected guests must be between 1 and 10,000'),
+        .isInt({ min: 1, max: 300 }).withMessage('Expected guests must be between 1 and 300'),
     (0, express_validator_1.body)('eventStartTime')
         .notEmpty().withMessage('Event start time is required')
         .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).withMessage('Please enter a valid time in HH:MM format'),

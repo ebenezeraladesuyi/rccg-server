@@ -50,24 +50,15 @@ const BookingSchema: Schema = new Schema(
         eventType: {
             type: String,
             required: [true, 'Event type is required'],
-            enum: [
-                'wedding',
-                'baptism',
-                'funeral',
-                'thanksgiving',
-                'dedication',
-                'conference',
-                'seminar',
-                'concert',
-                'other'
-            ],
-            default: 'other'
+            trim: true,
+            minlength: [2, 'Event type must be at least 2 characters'],
+            maxlength: [100, 'Event type cannot exceed 100 characters']
         },
         expectedGuests: {
             type: Number,
             required: [true, 'Number of expected guests is required'],
             min: [1, 'At least 1 guest is required'],
-            max: [10000, 'Maximum 10,000 guests allowed']
+            max: [300, 'Maximum 300 guests allowed']
         },
         eventStartTime: {
             type: String,

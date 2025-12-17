@@ -5,7 +5,7 @@ import { validateBooking } from '../middleware/validation';
 const bookingRouter = express.Router();
 
 // Public routes
-bookingRouter.post('/', validateBooking, createBooking);
+bookingRouter.post('/book', validateBooking, createBooking);
 bookingRouter.get('/public/:id', getBookingById); // Public viewing of specific booking
 
 // Admin routes (protected)
