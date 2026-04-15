@@ -7,6 +7,7 @@ import firstTimerRouter from "./routes/FirstTimerRouter";
 import blogRouter from "./routes/BlogRouter";
 import paymentRouter from "./routes/PaymentRoutes";
 import bookingRouter from "./routes/BookingRoutes";
+import adminRouter from "./routes/AdminRouter";
 
 
 const appConfig = (app: Application) => {
@@ -20,6 +21,7 @@ const appConfig = (app: Application) => {
   app.use("/blog", blogRouter)
   app.use("/payment", paymentRouter)
   app.use("/book", bookingRouter)
+  app.use("/admin", adminRouter)
 
 
   app.get("/" , (req: Request , res:Response)=>{

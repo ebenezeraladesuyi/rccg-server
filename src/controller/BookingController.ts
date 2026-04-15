@@ -74,21 +74,6 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 
         await newBooking.save();
 
-        // Send confirmation email
-        // try {
-        //     await sendBookingConfirmationEmail(newBooking);
-        // } catch (emailError) {
-        //     console.error('Failed to send confirmation email:', emailError);
-        //     // Don't fail the request if email fails
-        // }
-
-        // Send notification to admin
-        // try {
-        //     await sendAdminNotificationEmail(newBooking);
-        // } catch (adminEmailError) {
-        //     console.error('Failed to send admin notification:', adminEmailError);
-        // }
-
         res.status(201).json({
             success: true,
             message: 'Booking request submitted successfully',
