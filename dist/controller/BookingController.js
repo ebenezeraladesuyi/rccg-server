@@ -97,60 +97,27 @@ const createBooking = async (req, res) => {
 exports.createBooking = createBooking;
 // Get all bookings (with filtering and pagination)
 const getAllBookings = async (req, res) => {
+    var _a;
     try {
-        const { page = 1, limit = 10, status, eventType, startDate, endDate, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
-        const query = {};
-        // Apply filters
-        if (status)
-            query.status = status;
-        if (eventType)
-            query.eventType = eventType;
-        if (startDate || endDate) {
-            query.proposedDate = {};
-            if (startDate)
-                query.proposedDate.$gte = new Date(startDate);
-            if (endDate)
-                query.proposedDate.$lte = new Date(endDate);
+        // Check if user is superAdmin
+        if (((_a = req.admin) === null || _a === void 0 ? void 0 : _a.role) !== 'superAdmin') {
+            res.status(403).json({
+                success: false,
+                message: 'Access denied. Only Super Admin can view all bookings.'
+            });
+            return;
         }
-        // Parse pagination parameters
-        const pageNum = parseInt(page);
-        const limitNum = parseInt(limit);
-        const skip = (pageNum - 1) * limitNum;
-        // Determine sort order
-        const sort = {};
-        sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
-        // Execute query with pagination
-        const [bookings, total] = await Promise.all([
-            BookingModel_1.BookingModel.find(query)
-                .sort(sort)
-                .skip(skip)
-                .limit(limitNum)
-                .lean(),
-            BookingModel_1.BookingModel.countDocuments(query)
-        ]);
-        // Calculate pagination metadata
-        const totalPages = Math.ceil(total / limitNum);
-        const hasNextPage = pageNum < totalPages;
-        const hasPrevPage = pageNum > 1;
+        const bookings = await BookingModel_1.BookingModel.find().sort({ createdAt: -1 });
         res.status(200).json({
             success: true,
-            data: bookings,
-            pagination: {
-                total,
-                page: pageNum,
-                limit: limitNum,
-                totalPages,
-                hasNextPage,
-                hasPrevPage
-            }
+            count: bookings.length,
+            data: bookings
         });
     }
     catch (error) {
-        console.error('Error fetching bookings:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to fetch bookings',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            message: error.message
         });
     }
 };

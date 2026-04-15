@@ -3,11 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkAuth = exports.logoutAdmin = exports.resetPassword = exports.forgotPassword = exports.updateEmail = exports.changePassword = exports.getAdminProfile = exports.loginAdmin = exports.setupAdmin = void 0;
+exports.checkAuth = exports.logoutAdmin = exports.resetPassword = exports.forgotPassword = exports.updateEmail = exports.changePassword = exports.getAllAdmins = exports.getAdminProfile = exports.loginAdmin = exports.createAdmin = exports.setupAdmin = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const jwtUtils_1 = require("../utils/jwtUtils");
 const AdminModel_1 = require("../model/AdminModel");
-// Setup admin (first-time only)
+/// Setup first superAdmin (first-time only)
 const setupAdmin = async (req, res) => {
     try {
         const { email, password, confirmPassword } = req.body;
@@ -33,24 +33,27 @@ const setupAdmin = async (req, res) => {
             });
             return;
         }
-        // Create admin
+        // Create superAdmin (first admin is always superAdmin)
         const admin = new AdminModel_1.AdminModel({
             email,
-            password
+            password,
+            role: 'superAdmin'
         });
         await admin.save();
         // Generate token
         const token = (0, jwtUtils_1.generateToken)({
             adminId: admin._id.toString(),
-            email: admin.email
+            email: admin.email,
+            role: admin.role
         });
         res.status(201).json({
             success: true,
-            message: 'Admin setup successfully',
+            message: 'Super Admin setup successfully',
             token,
             admin: {
                 id: admin._id,
                 email: admin.email,
+                role: admin.role,
                 lastLogin: admin.lastLogin
             }
         });
@@ -70,11 +73,80 @@ const setupAdmin = async (req, res) => {
     }
 };
 exports.setupAdmin = setupAdmin;
+// Create admin (only superAdmin can do this)
+const createAdmin = async (req, res) => {
+    var _a;
+    try {
+        const { email, password, confirmPassword, role } = req.body;
+        // Check if requester is superAdmin
+        if (((_a = req.admin) === null || _a === void 0 ? void 0 : _a.role) !== 'superAdmin') {
+            res.status(403).json({
+                success: false,
+                message: 'Access denied. Only Super Admin can create new admins.'
+            });
+            return;
+        }
+        // Validate input
+        if (!email || !password || !confirmPassword) {
+            res.status(400).json({
+                success: false,
+                message: 'Email, password and confirm password are required'
+            });
+            return;
+        }
+        if (password !== confirmPassword) {
+            res.status(400).json({
+                success: false,
+                message: 'Passwords do not match'
+            });
+            return;
+        }
+        if (password.length < 8) {
+            res.status(400).json({
+                success: false,
+                message: 'Password must be at least 8 characters long'
+            });
+            return;
+        }
+        // Check if email already exists
+        const existingAdmin = await AdminModel_1.AdminModel.findOne({ email });
+        if (existingAdmin) {
+            res.status(400).json({
+                success: false,
+                message: 'Email already exists'
+            });
+            return;
+        }
+        // Create new admin (default role is 'admin' if not specified)
+        const newAdmin = new AdminModel_1.AdminModel({
+            email,
+            password,
+            role: role === 'superAdmin' ? 'superAdmin' : 'admin' // Only allow setting superAdmin if explicitly requested
+        });
+        await newAdmin.save();
+        res.status(201).json({
+            success: true,
+            message: 'Admin created successfully',
+            admin: {
+                id: newAdmin._id,
+                email: newAdmin.email,
+                role: newAdmin.role,
+                createdAt: newAdmin.createdAt
+            }
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+exports.createAdmin = createAdmin;
 // Login admin
 const loginAdmin = async (req, res) => {
     try {
         const { email, password } = req.body;
-        // Validate input
         if (!email || !password) {
             res.status(400).json({
                 success: false,
@@ -82,7 +154,6 @@ const loginAdmin = async (req, res) => {
             });
             return;
         }
-        // Find admin by email and include password
         const admin = await AdminModel_1.AdminModel.findOne({ email }).select('+password');
         if (!admin) {
             res.status(401).json({
@@ -91,7 +162,6 @@ const loginAdmin = async (req, res) => {
             });
             return;
         }
-        // Verify password
         const isPasswordValid = await admin.comparePassword(password);
         if (!isPasswordValid) {
             res.status(401).json({
@@ -100,13 +170,12 @@ const loginAdmin = async (req, res) => {
             });
             return;
         }
-        // Update last login
         admin.lastLogin = new Date();
         await admin.save();
-        // Generate token
         const token = (0, jwtUtils_1.generateToken)({
             adminId: admin._id.toString(),
-            email: admin.email
+            email: admin.email,
+            role: admin.role
         });
         res.status(200).json({
             success: true,
@@ -115,6 +184,7 @@ const loginAdmin = async (req, res) => {
             admin: {
                 id: admin._id,
                 email: admin.email,
+                role: admin.role,
                 lastLogin: admin.lastLogin
             }
         });
@@ -144,6 +214,7 @@ const getAdminProfile = async (req, res) => {
             admin: {
                 id: admin._id,
                 email: admin.email,
+                role: admin.role,
                 lastLogin: admin.lastLogin,
                 createdAt: admin.createdAt,
                 updatedAt: admin.updatedAt
@@ -158,6 +229,32 @@ const getAdminProfile = async (req, res) => {
     }
 };
 exports.getAdminProfile = getAdminProfile;
+// Get all admins (only superAdmin)
+const getAllAdmins = async (req, res) => {
+    var _a;
+    try {
+        if (((_a = req.admin) === null || _a === void 0 ? void 0 : _a.role) !== 'superAdmin') {
+            res.status(403).json({
+                success: false,
+                message: 'Access denied. Only Super Admin can view all admins.'
+            });
+            return;
+        }
+        const admins = await AdminModel_1.AdminModel.find().select('-password');
+        res.status(200).json({
+            success: true,
+            count: admins.length,
+            admins
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+exports.getAllAdmins = getAllAdmins;
 // Change password
 const changePassword = async (req, res) => {
     var _a;
@@ -264,7 +361,8 @@ const updateEmail = async (req, res) => {
         // Generate new token with updated email
         const token = (0, jwtUtils_1.generateToken)({
             adminId: admin._id.toString(),
-            email: admin.email
+            email: admin.email,
+            role: admin.role,
         });
         res.status(200).json({
             success: true,

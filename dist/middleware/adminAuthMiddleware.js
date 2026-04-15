@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkAdminExists = exports.authenticateAdmin = void 0;
+exports.checkAdminExists = exports.requireSuperAdmin = exports.authenticateAdmin = void 0;
 const jwtUtils_1 = require("../utils/jwtUtils");
 const AdminModel_1 = require("../model/AdminModel");
-// Authentication middleware - FIXED: Proper void return
+// Authentication middleware
 const authenticateAdmin = async (req, res, next) => {
     try {
         const token = (0, jwtUtils_1.extractTokenFromHeader)(req);
@@ -12,7 +12,7 @@ const authenticateAdmin = async (req, res, next) => {
                 success: false,
                 message: 'Access denied. No token provided.'
             });
-            return; // Just return, don't return the response
+            return;
         }
         const decoded = (0, jwtUtils_1.verifyToken)(token);
         // Verify admin still exists
@@ -22,13 +22,14 @@ const authenticateAdmin = async (req, res, next) => {
                 success: false,
                 message: 'Admin account no longer exists'
             });
-            return; // Just return, don't return the response
+            return;
         }
         req.admin = {
             adminId: admin._id.toString(),
-            email: admin.email
+            email: admin.email,
+            role: admin.role
         };
-        next(); // Call next, don't return anything
+        next();
     }
     catch (error) {
         if (error.name === 'TokenExpiredError') {
@@ -46,7 +47,19 @@ const authenticateAdmin = async (req, res, next) => {
     }
 };
 exports.authenticateAdmin = authenticateAdmin;
-// Check if admin exists (for setup) - FIXED: Proper void return
+// Check if admin is superAdmin
+const requireSuperAdmin = async (req, res, next) => {
+    if (!req.admin || req.admin.role !== 'superAdmin') {
+        res.status(403).json({
+            success: false,
+            message: 'Access denied. Super Admin privileges required.'
+        });
+        return;
+    }
+    next();
+};
+exports.requireSuperAdmin = requireSuperAdmin;
+// Check if admin exists (for setup)
 const checkAdminExists = async (req, res, next) => {
     try {
         const adminCount = await AdminModel_1.AdminModel.countDocuments();
@@ -55,9 +68,9 @@ const checkAdminExists = async (req, res, next) => {
                 success: false,
                 message: 'Admin already setup. Use login instead.'
             });
-            return; // Just return, don't return the response
+            return;
         }
-        next(); // Call next, don't return anything
+        next();
     }
     catch (error) {
         res.status(500).json({

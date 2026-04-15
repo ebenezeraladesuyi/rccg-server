@@ -4,7 +4,7 @@ import { generateToken } from '../utils/jwtUtils';
 import { AdminModel } from '../model/AdminModel';
 import { AdminAuthRequest } from '../middleware/adminAuthMiddleware';
 
-// Setup admin (first-time only)
+/// Setup first superAdmin (first-time only)
 export const setupAdmin = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password, confirmPassword } = req.body;
@@ -34,10 +34,11 @@ export const setupAdmin = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
-        // Create admin
+        // Create superAdmin (first admin is always superAdmin)
         const admin = new AdminModel({
             email,
-            password
+            password,
+            role: 'superAdmin'
         });
 
         await admin.save();
@@ -45,16 +46,18 @@ export const setupAdmin = async (req: Request, res: Response): Promise<void> => 
         // Generate token
         const token = generateToken({
             adminId: admin._id.toString(),
-            email: admin.email
+            email: admin.email,
+            role: admin.role
         });
 
         res.status(201).json({
             success: true,
-            message: 'Admin setup successfully',
+            message: 'Super Admin setup successfully',
             token,
             admin: {
                 id: admin._id,
                 email: admin.email,
+                role: admin.role,
                 lastLogin: admin.lastLogin
             }
         });
@@ -73,12 +76,87 @@ export const setupAdmin = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
+// Create admin (only superAdmin can do this)
+export const createAdmin = async (req: AdminAuthRequest, res: Response): Promise<void> => {
+    try {
+        const { email, password, confirmPassword, role } = req.body;
+
+        // Check if requester is superAdmin
+        if (req.admin?.role !== 'superAdmin') {
+            res.status(403).json({ 
+                success: false,
+                message: 'Access denied. Only Super Admin can create new admins.' 
+            });
+            return;
+        }
+
+        // Validate input
+        if (!email || !password || !confirmPassword) {
+            res.status(400).json({ 
+                success: false,
+                message: 'Email, password and confirm password are required' 
+            });
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            res.status(400).json({ 
+                success: false,
+                message: 'Passwords do not match' 
+            });
+            return;
+        }
+
+        if (password.length < 8) {
+            res.status(400).json({ 
+                success: false,
+                message: 'Password must be at least 8 characters long' 
+            });
+            return;
+        }
+
+        // Check if email already exists
+        const existingAdmin = await AdminModel.findOne({ email });
+        if (existingAdmin) {
+            res.status(400).json({ 
+                success: false,
+                message: 'Email already exists' 
+            });
+            return;
+        }
+
+        // Create new admin (default role is 'admin' if not specified)
+        const newAdmin = new AdminModel({
+            email,
+            password,
+            role: role === 'superAdmin' ? 'superAdmin' : 'admin' // Only allow setting superAdmin if explicitly requested
+        });
+
+        await newAdmin.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Admin created successfully',
+            admin: {
+                id: newAdmin._id,
+                email: newAdmin.email,
+                role: newAdmin.role,
+                createdAt: newAdmin.createdAt
+            }
+        });
+    } catch (error: any) {
+        res.status(500).json({ 
+            success: false,
+            message: error.message 
+        });
+    }
+};
+
 // Login admin
 export const loginAdmin = async (req: Request, res: Response): Promise<void> => {
     try {
         const { email, password } = req.body;
 
-        // Validate input
         if (!email || !password) {
             res.status(400).json({ 
                 success: false,
@@ -87,7 +165,6 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
-        // Find admin by email and include password
         const admin = await AdminModel.findOne({ email }).select('+password');
 
         if (!admin) {
@@ -98,7 +175,6 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
-        // Verify password
         const isPasswordValid = await admin.comparePassword(password);
         
         if (!isPasswordValid) {
@@ -109,14 +185,13 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
-        // Update last login
         admin.lastLogin = new Date();
         await admin.save();
 
-        // Generate token
         const token = generateToken({
             adminId: admin._id.toString(),
-            email: admin.email
+            email: admin.email,
+            role: admin.role
         });
 
         res.status(200).json({
@@ -126,6 +201,7 @@ export const loginAdmin = async (req: Request, res: Response): Promise<void> => 
             admin: {
                 id: admin._id,
                 email: admin.email,
+                role: admin.role,
                 lastLogin: admin.lastLogin
             }
         });
@@ -155,10 +231,37 @@ export const getAdminProfile = async (req: AdminAuthRequest, res: Response): Pro
             admin: {
                 id: admin._id,
                 email: admin.email,
+                role: admin.role,
                 lastLogin: admin.lastLogin,
                 createdAt: admin.createdAt,
                 updatedAt: admin.updatedAt
             }
+        });
+    } catch (error: any) {
+        res.status(500).json({ 
+            success: false,
+            message: error.message 
+        });
+    }
+};
+
+// Get all admins (only superAdmin)
+export const getAllAdmins = async (req: AdminAuthRequest, res: Response): Promise<void> => {
+    try {
+        if (req.admin?.role !== 'superAdmin') {
+            res.status(403).json({ 
+                success: false,
+                message: 'Access denied. Only Super Admin can view all admins.' 
+            });
+            return;
+        }
+
+        const admins = await AdminModel.find().select('-password');
+        
+        res.status(200).json({
+            success: true,
+            count: admins.length,
+            admins
         });
     } catch (error: any) {
         res.status(500).json({ 
@@ -289,7 +392,8 @@ export const updateEmail = async (req: AdminAuthRequest, res: Response): Promise
         // Generate new token with updated email
         const token = generateToken({
             adminId: admin._id.toString(),
-            email: admin.email
+            email: admin.email,
+            role: admin.role,
         });
 
         res.status(200).json({

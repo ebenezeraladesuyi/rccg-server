@@ -21,7 +21,6 @@ const extractTokenFromHeader = (req) => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
         return authHeader.substring(7);
     }
-    // Also check cookies if using cookie-parser
     if (req.cookies && req.cookies.adminToken) {
         return req.cookies.adminToken;
     }

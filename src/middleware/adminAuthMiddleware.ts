@@ -6,10 +6,11 @@ export interface AdminAuthRequest extends Request {
     admin?: {
         adminId: string;
         email: string;
+        role: string;
     };
 }
 
-// Authentication middleware - FIXED: Proper void return
+// Authentication middleware
 export const authenticateAdmin = async (req: AdminAuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
         const token = extractTokenFromHeader(req);
@@ -19,7 +20,7 @@ export const authenticateAdmin = async (req: AdminAuthRequest, res: Response, ne
                 success: false,
                 message: 'Access denied. No token provided.' 
             });
-            return; // Just return, don't return the response
+            return;
         }
 
         const decoded = verifyToken(token);
@@ -31,15 +32,16 @@ export const authenticateAdmin = async (req: AdminAuthRequest, res: Response, ne
                 success: false,
                 message: 'Admin account no longer exists' 
             });
-            return; // Just return, don't return the response
+            return;
         }
 
         req.admin = {
             adminId: admin._id.toString(),
-            email: admin.email
+            email: admin.email,
+            role: admin.role
         };
         
-        next(); // Call next, don't return anything
+        next();
     } catch (error: any) {
         if (error.name === 'TokenExpiredError') {
             res.status(401).json({ 
@@ -57,7 +59,19 @@ export const authenticateAdmin = async (req: AdminAuthRequest, res: Response, ne
     }
 };
 
-// Check if admin exists (for setup) - FIXED: Proper void return
+// Check if admin is superAdmin
+export const requireSuperAdmin = async (req: AdminAuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    if (!req.admin || req.admin.role !== 'superAdmin') {
+        res.status(403).json({ 
+            success: false,
+            message: 'Access denied. Super Admin privileges required.' 
+        });
+        return;
+    }
+    next();
+};
+
+// Check if admin exists (for setup)
 export const checkAdminExists = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
         const adminCount = await AdminModel.countDocuments();
@@ -66,9 +80,9 @@ export const checkAdminExists = async (req: Request, res: Response, next: NextFu
                 success: false,
                 message: 'Admin already setup. Use login instead.' 
             });
-            return; // Just return, don't return the response
+            return;
         }
-        next(); // Call next, don't return anything
+        next();
     } catch (error: any) {
         res.status(500).json({ 
             success: false,

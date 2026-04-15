@@ -42,7 +42,13 @@ const adminSchema = new mongoose_1.Schema({
         type: String,
         required: [true, 'Password is required'],
         minlength: [8, 'Password must be at least 8 characters'],
-        select: false // Don't return password by default
+        select: false
+    },
+    role: {
+        type: String,
+        enum: ['superAdmin', 'admin'],
+        default: 'admin',
+        required: true
     },
     lastLogin: {
         type: Date,

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import nodemailer from 'nodemailer';
 import { BookingModel, IBooking } from '../model/BookingModel';
+import { AdminAuthRequest } from '../middleware/adminAuthMiddleware';
 
 // Create new booking
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
@@ -116,74 +117,28 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 };
 
 // Get all bookings (with filtering and pagination)
-export const getAllBookings = async (req: Request, res: Response): Promise<void> => {
+export const getAllBookings = async (req: AdminAuthRequest, res: Response): Promise<void> => {
     try {
-        const {
-            page = 1,
-            limit = 10,
-            status,
-            eventType,
-            startDate,
-            endDate,
-            sortBy = 'createdAt',
-            sortOrder = 'desc'
-        } = req.query;
-
-        const query: any = {};
-
-        // Apply filters
-        if (status) query.status = status;
-        if (eventType) query.eventType = eventType;
-        
-        if (startDate || endDate) {
-            query.proposedDate = {};
-            if (startDate) query.proposedDate.$gte = new Date(startDate as string);
-            if (endDate) query.proposedDate.$lte = new Date(endDate as string);
+        // Check if user is superAdmin
+        if (req.admin?.role !== 'superAdmin') {
+            res.status(403).json({ 
+                success: false,
+                message: 'Access denied. Only Super Admin can view all bookings.' 
+            });
+            return;
         }
 
-        // Parse pagination parameters
-        const pageNum = parseInt(page as string);
-        const limitNum = parseInt(limit as string);
-        const skip = (pageNum - 1) * limitNum;
-
-        // Determine sort order
-        const sort: any = {};
-        sort[sortBy as string] = sortOrder === 'desc' ? -1 : 1;
-
-        // Execute query with pagination
-        const [bookings, total] = await Promise.all([
-            BookingModel.find(query)
-                .sort(sort)
-                .skip(skip)
-                .limit(limitNum)
-                .lean(),
-            BookingModel.countDocuments(query)
-        ]);
-
-        // Calculate pagination metadata
-        const totalPages = Math.ceil(total / limitNum);
-        const hasNextPage = pageNum < totalPages;
-        const hasPrevPage = pageNum > 1;
-
+        const bookings = await BookingModel.find().sort({ createdAt: -1 });
+        
         res.status(200).json({
             success: true,
-            data: bookings,
-            pagination: {
-                total,
-                page: pageNum,
-                limit: limitNum,
-                totalPages,
-                hasNextPage,
-                hasPrevPage
-            }
+            count: bookings.length,
+            data: bookings
         });
-
     } catch (error: any) {
-        console.error('Error fetching bookings:', error);
-        res.status(500).json({
+        res.status(500).json({ 
             success: false,
-            message: 'Failed to fetch bookings',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            message: error.message 
         });
     }
 };

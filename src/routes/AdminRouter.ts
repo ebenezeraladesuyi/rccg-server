@@ -8,10 +8,11 @@ import {
     forgotPassword,
     resetPassword,
     logoutAdmin,
-    checkAuth
+    checkAuth,
+    createAdmin,
+    getAllAdmins
 } from '../controller/AdminController';
-import { authenticateAdmin, checkAdminExists } from '../middleware/adminAuthMiddleware';
-
+import { authenticateAdmin, checkAdminExists, requireSuperAdmin } from '../middleware/adminAuthMiddleware';
 
 const adminRouter = express.Router();
 
@@ -24,7 +25,7 @@ adminRouter.post('/reset-password', resetPassword);
 // Check if admin exists (for frontend to know if setup is needed)
 adminRouter.get('/check-setup', async (req, res) => {
     try {
-        const adminCount = await require('../models/AdminModel').AdminModel.countDocuments();
+        const adminCount = await require('../model/AdminModel').AdminModel.countDocuments();
         res.json({ 
             success: true, 
             isSetup: adminCount > 0 
@@ -37,11 +38,15 @@ adminRouter.get('/check-setup', async (req, res) => {
     }
 });
 
-// Protected routes
+// Protected routes (require authentication)
 adminRouter.get('/profile', authenticateAdmin, getAdminProfile);
 adminRouter.put('/change-password', authenticateAdmin, changePassword);
 adminRouter.put('/update-email', authenticateAdmin, updateEmail);
 adminRouter.post('/logout', authenticateAdmin, logoutAdmin);
 adminRouter.get('/check-auth', authenticateAdmin, checkAuth);
+
+// Super Admin only routes
+adminRouter.post('/create', authenticateAdmin, requireSuperAdmin, createAdmin);
+adminRouter.get('/all', authenticateAdmin, requireSuperAdmin, getAllAdmins);
 
 export default adminRouter;

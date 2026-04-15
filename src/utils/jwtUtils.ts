@@ -4,6 +4,7 @@ import { Request } from 'express';
 export interface JwtPayload {
     adminId: string;
     email: string;
+    role: string;
 }
 
 export const generateToken = (payload: JwtPayload): string => {
@@ -24,7 +25,6 @@ export const extractTokenFromHeader = (req: Request): string | null => {
         return authHeader.substring(7);
     }
     
-    // Also check cookies if using cookie-parser
     if (req.cookies && req.cookies.adminToken) {
         return req.cookies.adminToken;
     }
