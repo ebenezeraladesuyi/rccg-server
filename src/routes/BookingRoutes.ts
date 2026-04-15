@@ -31,10 +31,18 @@ bookingRouter.get('/public/:id', getBookingById); // Public viewing of specific 
     // authenticate, 
     // getAllBookings); 
 
-bookingRouter.get('/admin', requireSuperAdmin, getAllBookings); // Add requireSuperAdmin here
+bookingRouter.get('/admin', 
+    // requireSuperAdmin, 
+    getAllBookings); 
 // bookingRouter.get('/admin/stats', requireSuperAdmin, getBookingStats); // Add requireSuperAdmin here
-bookingRouter.get('/admin/:id', requireSuperAdmin, getBookingById); // Add requireSuperAdmin here
-bookingRouter.put('/admin/:id/status', requireSuperAdmin, updateBookingStatus); // Add requireSuperAdmin here
-bookingRouter.delete('/admin/:id', requireSuperAdmin, deleteBooking); // Add requireSuperAdmin here
+bookingRouter.get('/admin/:id', 
+    // requireSuperAdmin, 
+    getBookingById); 
+bookingRouter.put('/admin/:id/status', 
+    // requireSuperAdmin, 
+    updateBookingStatus); // Add requireSuperAdmin here
+bookingRouter.delete('/admin/:id', 
+    // requireSuperAdmin, 
+    deleteBooking); // Add requireSuperAdmin here
 
 export default bookingRouter;

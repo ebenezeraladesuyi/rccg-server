@@ -120,13 +120,13 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
 export const getAllBookings = async (req: AdminAuthRequest, res: Response): Promise<void> => {
     try {
         // Check if user is superAdmin
-        if (req.admin?.role !== 'superAdmin') {
-            res.status(403).json({ 
-                success: false,
-                message: 'Access denied. Only Super Admin can view all bookings.' 
-            });
-            return;
-        }
+        // if (req.admin?.role !== 'superAdmin') {
+        //     res.status(403).json({ 
+        //         success: false,
+        //         message: 'Access denied. Only Super Admin can view all bookings.' 
+        //     });
+        //     return;
+        // }
 
         const bookings = await BookingModel.find().sort({ createdAt: -1 });
         

@@ -97,16 +97,15 @@ const createBooking = async (req, res) => {
 exports.createBooking = createBooking;
 // Get all bookings (with filtering and pagination)
 const getAllBookings = async (req, res) => {
-    var _a;
     try {
         // Check if user is superAdmin
-        if (((_a = req.admin) === null || _a === void 0 ? void 0 : _a.role) !== 'superAdmin') {
-            res.status(403).json({
-                success: false,
-                message: 'Access denied. Only Super Admin can view all bookings.'
-            });
-            return;
-        }
+        // if (req.admin?.role !== 'superAdmin') {
+        //     res.status(403).json({ 
+        //         success: false,
+        //         message: 'Access denied. Only Super Admin can view all bookings.' 
+        //     });
+        //     return;
+        // }
         const bookings = await BookingModel_1.BookingModel.find().sort({ createdAt: -1 });
         res.status(200).json({
             success: true,
