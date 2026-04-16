@@ -36,7 +36,7 @@ const BookingSchema: Schema = new Schema(
             type: String,
             required: [true, 'Contact number is required'],
             trim: true,
-            // match: [/^[\+]?[1-9][\d]{0,15}$/, 'Please enter a valid contact number']
+            match: [/^[\+]?[0-9][\d]{7,20}$/, 'Please enter a valid contact number']
         },
         proposedDate: {
             type: Date,
