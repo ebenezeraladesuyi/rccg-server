@@ -14,8 +14,8 @@ exports.validateBooking = [
         .normalizeEmail(),
     (0, express_validator_1.body)('contactNumber')
         .trim()
-        .notEmpty().withMessage('Contact number is required')
-        .matches(/^[\+]?[1-9][\d]{0,15}$/).withMessage('Please enter a valid contact number'),
+        .notEmpty().withMessage('Contact number is required'),
+    // .matches(/^[\+]?[1-9][\d]{0,15}$/).withMessage('Please enter a valid contact number')
     (0, express_validator_1.body)('proposedDate')
         .notEmpty().withMessage('Proposed date is required')
         .isISO8601().withMessage('Please enter a valid date in YYYY-MM-DD format')
