@@ -2,8 +2,128 @@ import { Request, Response } from 'express';
 import nodemailer from 'nodemailer';
 import { BookingModel, IBooking } from '../model/BookingModel';
 import { AdminAuthRequest } from '../middleware/adminAuthMiddleware';
+import { sendStatusUpdateEmail } from '../utils/emailService';
+import { sendAdminNotification, sendBookingConfirmation } from '../utils/emailService';
 
 // Create new booking
+// export const createBooking = async (req: Request, res: Response): Promise<void> => {
+//     try {
+//         const {
+//             name,
+//             email,
+//             contactNumber,
+//             proposedDate,
+//             eventType,
+//             expectedGuests,
+//             eventStartTime,
+//             eventEndTime,
+//             additionalNotes
+//         } = req.body;
+
+//         // Validate required fields
+//         if (!name || !email || !contactNumber || !proposedDate || !eventType || !expectedGuests || !eventStartTime || !eventEndTime) {
+//             res.status(400).json({
+//                 success: false,
+//                 message: 'All required fields must be provided'
+//             });
+//             return;
+//         }
+
+//         // Parse and validate date
+//         const parsedDate = new Date(proposedDate);
+//         if (isNaN(parsedDate.getTime())) {
+//             res.status(400).json({
+//                 success: false,
+//                 message: 'Invalid date format'
+//             });
+//             return;
+//         }
+
+//         // Check for existing bookings on the same date
+//         const existingBooking = await BookingModel.findOne({
+//             proposedDate: {
+//                 $gte: new Date(parsedDate.setHours(0, 0, 0, 0)),
+//                 $lt: new Date(parsedDate.setHours(23, 59, 59, 999))
+//             },
+//             status: { $in: ['pending', 'approved'] }
+//         });
+
+//         if (existingBooking) {
+//             res.status(409).json({
+//                 success: false,
+//                 message: 'There is already a booking for this date. Please choose another date.',
+//                 conflictingBooking: {
+//                     id: existingBooking._id,
+//                     eventType: existingBooking.eventType,
+//                     time: `${existingBooking.eventStartTime} - ${existingBooking.eventEndTime}`
+//                 }
+//             });
+//             return;
+//         }
+
+//         // Create new booking
+//         const newBooking = new BookingModel({
+//             name,
+//             email,
+//             contactNumber,
+//             proposedDate: parsedDate,
+//             eventType,
+//             expectedGuests: parseInt(expectedGuests),
+//             eventStartTime,
+//             eventEndTime,
+//             additionalNotes: additionalNotes || '',
+//             status: 'pending'
+//         });
+
+//         await newBooking.save();
+
+//         // Send email to client (booking confirmation)
+//         // await sendBookingConfirmation(newBooking);
+        
+//         // Send email to admin (new booking notification)
+//         // await sendAdminNotification(newBooking);
+
+//         res.status(201).json({
+//             success: true,
+//             message: 'Booking request submitted successfully',
+//             data: {
+//                 booking: newBooking,
+//                 referenceId: newBooking._id,
+//                 nextSteps: 'Our team will review your request and contact you within 24-48 hours.'
+//             }
+//         });
+
+//     } catch (error: any) {
+//         console.error('Error creating booking:', error);
+        
+//         // Handle validation errors
+//         if (error.name === 'ValidationError') {
+//             const errors = Object.values(error.errors).map((err: any) => err.message);
+//             res.status(400).json({
+//                 success: false,
+//                 message: 'Validation failed',
+//                 errors
+//             });
+//             return;
+//         }
+
+//         // Handle duplicate key errors
+//         if (error.code === 11000) {
+//             res.status(409).json({
+//                 success: false,
+//                 message: 'Duplicate booking detected'
+//             });
+//             return;
+//         }
+
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal server error',
+//             error: process.env.NODE_ENV === 'development' ? error.message : undefined
+//         });
+//     }
+// };
+
 export const createBooking = async (req: Request, res: Response): Promise<void> => {
     try {
         const {
@@ -38,10 +158,16 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         }
 
         // Check for existing bookings on the same date
+        const startOfDay = new Date(parsedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        
+        const endOfDay = new Date(parsedDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
         const existingBooking = await BookingModel.findOne({
             proposedDate: {
-                $gte: new Date(parsedDate.setHours(0, 0, 0, 0)),
-                $lt: new Date(parsedDate.setHours(23, 59, 59, 999))
+                $gte: startOfDay,
+                $lt: endOfDay
             },
             status: { $in: ['pending', 'approved'] }
         });
@@ -74,6 +200,14 @@ export const createBooking = async (req: Request, res: Response): Promise<void> 
         });
 
         await newBooking.save();
+
+        // Send emails (don't await to avoid delaying response)
+        Promise.all([
+            sendBookingConfirmation(newBooking),
+            sendAdminNotification(newBooking)
+        ]).catch(emailError => {
+            console.error('Failed to send emails:', emailError);
+        });
 
         res.status(201).json({
             success: true,
@@ -183,7 +317,82 @@ export const getBookingById = async (req: Request, res: Response): Promise<void>
 };
 
 // Update booking status (approve/reject/cancel)
-export const updateBookingStatus = async (req: Request, res: Response): Promise<void> => {
+// export const updateBookingStatus = async (req: Request, res: Response): Promise<void> => {
+//     try {
+//         const { id } = req.params;
+//         const { status, adminNotes } = req.body;
+
+//         // Validate status
+//         const validStatuses = ['approved', 'rejected', 'cancelled'];
+//         if (!validStatuses.includes(status)) {
+//             res.status(400).json({
+//                 success: false,
+//                 message: 'Invalid status. Must be one of: approved, rejected, cancelled'
+//             });
+//             return;
+//         }
+
+//         const booking = await BookingModel.findById(id);
+
+//         if (!booking) {
+//             res.status(404).json({
+//                 success: false,
+//                 message: 'Booking not found'
+//             });
+//             return;
+//         }
+
+//         // const previousStatus = booking.status;
+
+//         // Update booking status
+//         booking.status = status;
+//         if (adminNotes) {
+//             booking.additionalNotes = `${booking.additionalNotes}\n\n[Admin Note: ${adminNotes}]`;
+//         }
+//         booking.updatedAt = new Date();
+//         // booking.status = status;
+//         // if (adminNotes) {
+//         //     const timestamp = new Date().toLocaleString();
+//         //     booking.adminNotes = booking.adminNotes 
+//         //         ? `${booking.adminNotes}\n\n[${timestamp}] Admin Note: ${adminNotes}`
+//         //         : `[${timestamp}] Admin Note: ${adminNotes}`;
+//         // }
+//         // booking.updatedAt = new Date();
+
+
+//         await booking.save();
+
+//         // Send status update email to client (only if status changed)
+//         // if (previousStatus !== status) {
+//         //     await sendStatusUpdateEmail(booking, status, adminNotes);
+//         // }
+
+//         res.status(200).json({
+//             success: true,
+//             message: `Booking ${status} successfully`,
+//             data: booking
+//         });
+
+//     } catch (error: any) {
+//         console.error('Error updating booking status:', error);
+        
+//         if (error.name === 'CastError') {
+//             res.status(400).json({
+//                 success: false,
+//                 message: 'Invalid booking ID'
+//             });
+//             return;
+//         }
+
+//         res.status(500).json({
+//             success: false,
+//             message: 'Failed to update booking status',
+//             error: process.env.NODE_ENV === 'development' ? error.message : undefined
+//         });
+//     }
+// };
+
+export const updateBookingStatus = async (req: AdminAuthRequest, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
         const { status, adminNotes } = req.body;
@@ -208,21 +417,36 @@ export const updateBookingStatus = async (req: Request, res: Response): Promise<
             return;
         }
 
+        const previousStatus = booking.status;
+        
         // Update booking status
-        booking.status = status;
+        booking.status = status as 'approved' | 'rejected' | 'cancelled';
+        
+        // Add admin notes if provided
         if (adminNotes) {
-            booking.additionalNotes = `${booking.additionalNotes}\n\n[Admin Note: ${adminNotes}]`;
+            const timestamp = new Date().toLocaleString();
+            const adminName = req.admin?.email || 'Admin';
+            
+            if (booking.adminNotes) {
+                booking.adminNotes = `${booking.adminNotes}\n\n[${timestamp}] ${adminName}: ${adminNotes}`;
+            } else {
+                booking.adminNotes = `[${timestamp}] ${adminName}: ${adminNotes}`;
+            }
         }
+        
         booking.updatedAt = new Date();
-
         await booking.save();
 
-        // Send status update email to user
-        // try {
-        //     await sendStatusUpdateEmail(booking, status, adminNotes);
-        // } catch (emailError) {
-        //     console.error('Failed to send status update email:', emailError);
-        // }
+        // Send status update email to client (only if status changed)
+        if (previousStatus !== status) {
+            try {
+                await sendStatusUpdateEmail(booking, status, adminNotes);
+                console.log(`Status update email sent to ${booking.email} for booking ${id}`);
+            } catch (emailError) {
+                console.error('Failed to send status update email:', emailError);
+                // Don't fail the request if email fails, just log it
+            }
+        }
 
         res.status(200).json({
             success: true,

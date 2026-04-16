@@ -44,7 +44,7 @@ const BookingSchema = new mongoose_1.Schema({
         type: String,
         required: [true, 'Contact number is required'],
         trim: true,
-        match: [/^[\+]?[1-9][\d]{0,15}$/, 'Please enter a valid contact number']
+        // match: [/^[\+]?[1-9][\d]{0,15}$/, 'Please enter a valid contact number']
     },
     proposedDate: {
         type: Date,
@@ -93,6 +93,11 @@ const BookingSchema = new mongoose_1.Schema({
     additionalNotes: {
         type: String,
         maxlength: [1000, 'Additional notes cannot exceed 1000 characters'],
+        trim: true
+    },
+    adminNotes: {
+        type: String,
+        default: '',
         trim: true
     },
     createdAt: {
