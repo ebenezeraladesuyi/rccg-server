@@ -76,7 +76,7 @@ const sendBookingConfirmation = async (booking) => {
                             <li>A staff member may contact you for additional details</li>
                         </ol>
                         
-                        <p>If you have any questions, please contact us at building@rccgopenheavens.com or call +353 (0) 87-416-0229.</p>
+                        <p>If you have any questions, please contact us at building@rccgopenheavens.com</p>
                         
                         <div style="text-align: center;">
                             <a href="https://rccgopenheavens.com" class="button">Visit Our Website</a>
@@ -198,7 +198,7 @@ const sendStatusUpdateEmail = async (booking, status, adminNotes) => {
                     </div>
                     <div class="footer">
                         <p>&copy; ${new Date().getFullYear()} RCCG Open Heavens Dublin. All rights reserved.</p>
-                        <p>RCCG Open Heavens | Unit 4, Chapelizod, Dublin 20, Ireland</p>
+                        <p>RCCG Open Heavens | 220/21 Lee Rd, Dublin Industrial Estate, Glasnevin Dublin 11, Ireland</p>
                     </div>
                 </div>
             </body>
